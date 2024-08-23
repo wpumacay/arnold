@@ -1,6 +1,10 @@
+from typing import Optional
+
+from omegaconf import DictConfig
 
 from environment.parameters import *
 from utils.recorder import DataRecorder
+from failgen.manager import FailManager
 
 import omni
 from omni.isaac.core.prims import XFormPrim
@@ -37,7 +41,9 @@ class BaseTask(ABC):
 
         self.objects_list = []
         self.recorder = None
-    
+
+        self._fail_manager = FailManager(task_name=cfg.task)
+
     def success(self):
         if hasattr(self, "checker") and self.checker and self.checker.success:
             return True
@@ -143,6 +149,10 @@ class BaseTask(ABC):
 
         if self.cfg.record:
             self.register_recorder()
+
+        if self._fail_manager:
+            self._fail_manager.set_robot(self.robot)
+            self._fail_manager.set_controller(self.c_controller)
 
         return self.render()
 

@@ -23,6 +23,9 @@ class OpenDrawer(BaseTask):
         self.logger = logging.getLogger(__name__)
         self.use_gpu_physics = False
 
+        if self._fail_manager:
+            self._fail_manager.set_logger(self.logger)
+
     def reset(self, robot_parameters, 
               scene_parameters, 
               object_parameters,
@@ -163,7 +166,8 @@ class OpenDrawer(BaseTask):
 
                 elif self.current_stage == 1:
                     current_target = (self.trans_pick, self.rotat_pick, grip_open)
-                
+                    # if self._fail_manager:
+                    #     current_target = self._fail_manager.on_update_target(current_target)
                 else:
                     try:
                         trans_interp, rotation_interp = next(position_rotation_interp_iter)
@@ -181,6 +185,8 @@ class OpenDrawer(BaseTask):
 
                 if current_target[2] != current_gripper_open:
                     if current_target[2] < 0.5:
+                        if self._fail_manager:
+                            self._fail_manager.on_gripper_start_close(self.current_stage)
                         target_joint_positions_gripper = self.gripper_controller.forward(action="close")
                         for _ in range(self.cfg.gripper_trigger_period):
                             articulation_controller = self.robot.get_articulation_controller()
@@ -189,6 +195,8 @@ class OpenDrawer(BaseTask):
                             simulation_context.step(render=render)
 
                     else:
+                        if self._fail_manager:
+                            self._fail_manager.on_gripper_start_open(self.current_stage)
                         target_joint_positions_gripper = self.gripper_controller.forward(action="open")
                         for _ in range(self.cfg.gripper_trigger_period):
                             articulation_controller = self.robot.get_articulation_controller()
@@ -200,6 +208,8 @@ class OpenDrawer(BaseTask):
                 if self.current_stage < 2:
                     self.current_stage += 1
                     self.logger.info(f"enter stage {self.current_stage}")
+                    if self._fail_manager:
+                        self._fail_manager.on_stage_completed(self.current_stage)
             
             else:
                 target_joint_positions = self.c_controller.forward(

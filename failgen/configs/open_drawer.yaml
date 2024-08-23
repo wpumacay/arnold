@@ -1,0 +1,13 @@
+data:
+  # Where to save the 
+  save_path: /vagrant/failgen_data
+  # Number of episodes to run
+  episodes_per_task: 5
+  # The stages that the motion primitives follow
+  stages: [0,1,2]
+failures:
+  - type: translation
+    name: trans
+    enabled: False
+    stages: [0,1,2]
+    range: [-0.5, 0.5]
