@@ -6,6 +6,7 @@ from omegaconf import DictConfig
 
 import omni
 from omni.isaac.franka import Franka
+from omni.isaac.franka.controllers import RMPFlowController
 
 from tasks.base_task import BaseTask
 
@@ -17,9 +18,13 @@ class IFailure(abc.ABC):
         self._stage_indices = stage_indices.copy()
 
         self._robot: Optional[Franka] = None
+        self._controller: Optional[RMPFlowController] = None
 
     def set_robot(self, robot: Franka) -> None:
         self._robot = robot
+
+    def set_controller(self, controller: RMPFlowController) -> None:
+        self._controller = controller
 
     @abc.abstractmethod
     def on_stage_completed(self, stage_id: int) -> None:

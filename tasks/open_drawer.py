@@ -14,6 +14,7 @@ from omni.isaac.core.simulation_context import SimulationContext
 
 import logging
 
+import numpy as np
 
 class OpenDrawer(BaseTask):
     def __init__(self, num_stages, horizon, stage_properties, cfg) -> None:

@@ -10,4 +10,4 @@ failures:
     name: trans
     enabled: False
     stages: [0,1,2]
-    range: [-0.5, 0.5]
+    amplitude: 0.5
