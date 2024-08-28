@@ -426,7 +426,7 @@ class BaseTask(ABC):
     def register_recorder(self):
         index = 0
         objects_paths = [prim.GetPath().pathString for prim in self.objects_list]
-        self.recorder = DataRecorder(self.robot.prim_path, objects_paths, self.robot, self.scene_parameters[index].task_type)
+        self.recorder = DataRecorder(self.robot.prim_path, objects_paths, self.robot, self.scene_parameters[index].task_type, self.cfg.cameras)
 
     def try_record(self, actions):
         if self.recorder is not None and self.recorder.record:
@@ -441,4 +441,5 @@ class BaseTask(ABC):
                 robot_states=dof_states,
                 actions=actions,
                 time_step=self.time_step,
+                frame_data=self.render(),
             )

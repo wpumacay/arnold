@@ -7,9 +7,10 @@ from omni.isaac.core.utils.types import ArticulationAction
 import gzip
 import json
 
+from PIL import Image
 
 class DataRecorder():
-    def __init__(self, robot_path, target_paths, frankabot, task_type):
+    def __init__(self, robot_path, target_paths, frankabot, task_type, camera_names):
         self.replayBuffer = []
         self.replayBufferObj = []
         self.record = False
@@ -17,6 +18,7 @@ class DataRecorder():
         self.target_paths = target_paths
         self.robot_path = robot_path
         self.target_objs = []
+        self.camera_names = camera_names
 
         for t_path in self.target_paths:
             self.target_objs.append(XFormPrim(t_path))
@@ -95,7 +97,7 @@ class DataRecorder():
         except OSError as e:
             print("Error: %s : %s" % (path, e.strerror))
     
-    def record_data(self, robot_states, actions, time_step):
+    def record_data(self, robot_states, actions, time_step, frame_data):
         self.obj_data = [{'pos': None, 'rot': None, 'joint': None, 'path': t_path} for t_path in self.target_paths]
         self.robot_data = {
             'joint_pos': robot_states['pos'].tolist(),
@@ -115,6 +117,9 @@ class DataRecorder():
             self.record_ptcl(time_step)
         else:
             raise RuntimeError("data recording for %s not implemented" % self.task_type)
+
+        self.record_cameras(frame_data, self.camera_names, time_step)
+
         if self.record:
             self.buffer['robot'].append(str(self.robot_data).replace("\n", ' ') + '\n')
             self.buffer['object'].append(str(self.obj_data).replace("\n", ' ') + '\n')
@@ -139,6 +144,19 @@ class DataRecorder():
         # print("get all particle:", self.checker.liquid_checker.get_all_particles())
         if time_step % self.ptcl_frame_skip == 0:
             self.ptcl_data = self.checker.liquid_checker.get_all_particles()
+
+    def record_cameras(self, frame_data, camera_names, time_step):
+        if self.traj_dir is None:
+            return
+
+        images_folder_path = os.path.join(self.traj_dir, "images")
+        os.makedirs(images_folder_path, exist_ok=True)
+
+        assert len(frame_data["images"]) == len(camera_names)
+        for (cam_name, cam_images) in zip(camera_names, frame_data["images"]):
+            pil_image = Image.fromarray(cam_images["rgb"])
+            pil_image.save(os.path.join(images_folder_path, f"{cam_name}_rgb_{time_step}.png"))
+
 
     def start_replay(self, traj_dir, checker):
         self.traj_dir = traj_dir

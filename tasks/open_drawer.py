@@ -24,6 +24,13 @@ class OpenDrawer(BaseTask):
         self.logger = logging.getLogger(__name__)
         self.use_gpu_physics = False
 
+        self._must_fail_grasp_open = False
+        self._must_fail_grasp_close = False
+        self._must_fail_translation = True
+        self._must_fail_rotation = False
+
+        self._fail_translation_range = 10.
+
         if self._fail_manager:
             self._fail_manager.set_logger(self.logger)
 
@@ -125,6 +132,8 @@ class OpenDrawer(BaseTask):
             self.end_stage = 2
             if use_gt:
                 self.trans_pick, self.rotat_pick = self.gt_actions[1]
+                if self._must_fail_translation:
+                    self.trans_pick = self.trans_pick + self._fail_translation_range * (np.random.rand(*self.trans_pick.shape) - 0.5)
             else:
                 self.trans_pick = act_pos
                 self.rotat_pick = act_rot
@@ -158,6 +167,8 @@ class OpenDrawer(BaseTask):
                 if self.current_stage == 0:
                     if use_gt:
                         trans_pre, rotation_pre = self.gt_actions[0]
+                        if self._must_fail_translation:
+                            trans_pre = trans_pre + self._fail_translation_range * (np.random.rand(*trans_pre.shape) - 0.5)
                     else:
                         trans_pre, rotation_pre = get_pre_grasp_action(
                             grasp_action=(self.trans_pick, self.rotat_pick),
